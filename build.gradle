@@ -9,8 +9,8 @@ repositories {
 
 test {
     //show stdout and stderr
-//    testLogging.showStandardStreams = true
-    testLogging.events 'passed', 'skipped', 'failed'
+    testLogging.showStandardStreams = true
+//    testLogging.events 'passed', 'skipped', 'failed'
     maxParallelForks = 2
 }
 
