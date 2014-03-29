@@ -1,0 +1,25 @@
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# intellij stuff     #
+######################
+*.iml
+*.ipr
+*.iws
+.idea/
+
+
+# gradle project     #
+######################
+.gradle/
+/build/
+/out/
+/target/
+
