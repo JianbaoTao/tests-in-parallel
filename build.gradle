@@ -1,17 +1,14 @@
+import java.lang.annotation.Annotation
+import java.lang.reflect.Field
+
 apply plugin: 'groovy'
+//apply from: 'annotationTestFilter.gradle'
 
 group='com.tao'
 version='1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
-}
-
-test {
-    //show stdout and stderr
-    testLogging.showStandardStreams = true
-//    testLogging.events 'passed', 'skipped', 'failed'
-    maxParallelForks = 2
 }
 
 
@@ -23,3 +20,111 @@ dependencies {
     testCompile 'junit:junit:4.11'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }
+
+List testClassNames() {
+    File classesDir = sourceSets.test.output.classesDir
+    String prefix = classesDir.toString() + '/'
+    List names = []
+    classesDir.traverse {
+        if( it.absolutePath.endsWith( '.class' ) ) {
+            String name = (it.absolutePath - prefix).replaceAll( '/', '.' ) - '.class'
+            names << name
+        }
+    }
+    return names
+}
+
+List annotationFilter( Map map ) {
+    map.prefix = map?.prefix ?: 'demo.'
+
+    // get a class loader
+    List urls = sourceSets.test.runtimeClasspath.collect {
+        it.toURI().toURL()
+    }
+    URLClassLoader loader = URLClassLoader.newInstance( urls as URL[] )
+
+    List result
+
+    // filter with annotations
+    if( !map.includes ) {
+        result = map?.names
+    } else {
+        result = []
+        map?.names.each { name ->
+            Class klass = loader.loadClass( name )
+            map?.includes.each { annotationName ->
+                String fullName = map.prefix + annotationName
+                Class<? extends Annotation> annotation = loader.loadClass( fullName ).asSubclass( Annotation )
+                if( klass.isAnnotationPresent( annotation ) ) {
+                    result << name
+                }
+            }
+        }
+    }
+    return result
+}
+
+
+
+task foobar << {
+    List names = testClassNames()
+    println names
+    List filtered = annotationFilter( names: names, includes: ['Smoke'] )
+    println filtered
+}
+
+
+task hello ( type: Test, dependsOn: testClasses ) {
+//    File classesDir = sourceSets.test.output.classesDir
+//    String prefix = classesDir.toString() + '/'
+//    List names = []
+//    classesDir.traverse {
+//        if( it.absolutePath.endsWith( '.class' ) ) {
+//            String name = (it.absolutePath - prefix).replaceAll( '/', '.' ) - '.class'
+//            names << name
+//        }
+//    }
+//
+//    println 'names: ' + names
+//    List result = annotationFilter( names: names, includes: ['Smoke'] )
+//    println 'result: ' + result
+////    println patterns
+////
+////
+//////    include patterns as String[]
+//    testLogging.showStandardStreams = true
+//
+//    filter {
+////        includePatterns = names as String[]
+////        setIncludePatterns( names as String[] )
+//        setIncludePatterns( ['junit.DemoTest5'] as String[] )
+////        setIncludePatterns( 'junit.DemoTest5' )
+//    }
+
+
+//    println sourceSets.test.output.classesDir
+//    URL url = sourceSets.test.output.classesDir.toURI().toURL()
+//    Class clazz = classLoader.loadClass( 'junit.DemoTest' )
+//    Class dummy = classLoader.loadClass( 'org.junit.Test' )
+//    println 'dummy: ' + dummy.name + ': ' + dummy.isAnnotation()
+//    clazz.declaredMethods.each {
+//        println it.name + ': ' + it.annotations.toList()
+//    }
+//    println clazz.name
+//    println clazz.annotations.toList()
+
+
+}
+
+
+test {
+    //show stdout and stderr
+    testLogging.showStandardStreams = true
+//    testLogging.events 'passed', 'skipped', 'failed'
+    maxParallelForks = 2
+//    forkEvery = 1
+}
+
+
+
+
