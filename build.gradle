@@ -71,12 +71,15 @@ List annotationFilter( Map map ) {
     return result
 }
 
-test {
-    List names = testClassNames()
-    List filtered = annotationFilter( names: names, includes: ['demo.Smoke'] )
+task smoke( type: Test, description: 'Run smoke tests' ) {
+    doFirst {
+        List names = testClassNames()
+        List filtered = annotationFilter( names: names, includes: ['demo.Smoke'] )
+        println 'Running ' + filtered.size() + ' tests:\n' + filtered*.toString()*.replaceAll('^','\t').join('\n')
 
-    filter {
-        setIncludePatterns( filtered as String[] )
+        filter {
+            setIncludePatterns( filtered as String[] )
+        }
     }
 }
 
