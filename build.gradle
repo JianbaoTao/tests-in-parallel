@@ -11,7 +11,6 @@ repositories {
     mavenCentral()
 }
 
-
 dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.2.2'
     compile 'org.slf4j:slf4j-api:1.7.5'
@@ -19,6 +18,11 @@ dependencies {
     compile 'ch.qos.logback:logback-core:1.0.13'
     testCompile 'junit:junit:4.11'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
+}
+
+tasks.withType( Test ) {
+    testLogging.showStandardStreams = true
+    testLogging.events 'passed', 'skipped', 'failed'
 }
 
 List testClassNames() {
@@ -34,14 +38,17 @@ List testClassNames() {
     return names
 }
 
-List annotationFilter( Map map ) {
-    map.prefix = map?.prefix ?: 'demo.'
-
-    // get a class loader
+ClassLoader getClassLoader() {
     List urls = sourceSets.test.runtimeClasspath.collect {
         it.toURI().toURL()
     }
-    URLClassLoader loader = URLClassLoader.newInstance( urls as URL[] )
+    return URLClassLoader.newInstance( urls as URL[] )
+}
+
+List annotationFilter( Map map ) {
+    map.prefix = map?.prefix ?: '' // prefix: provide convenience for passing in annotation names
+
+    ClassLoader loader = classLoader
 
     List result
 
@@ -61,68 +68,25 @@ List annotationFilter( Map map ) {
             }
         }
     }
+
+    if( result?.size() == 0 ) result = [ 'no.tests.to.run' ]
     return result
 }
 
+test {
+    List names = testClassNames()
+    List filtered = annotationFilter( names: names, includes: ['demo.Smoke'] )
 
+    filter {
+        setIncludePatterns( filtered as String[] )
+    }
+}
 
 task foobar << {
     List names = testClassNames()
     println names
-    List filtered = annotationFilter( names: names, includes: ['Smoke'] )
+    List filtered = annotationFilter( names: names, includes: ['demo.Smoke'] )
     println filtered
-}
-
-
-task hello ( type: Test, dependsOn: testClasses ) {
-//    File classesDir = sourceSets.test.output.classesDir
-//    String prefix = classesDir.toString() + '/'
-//    List names = []
-//    classesDir.traverse {
-//        if( it.absolutePath.endsWith( '.class' ) ) {
-//            String name = (it.absolutePath - prefix).replaceAll( '/', '.' ) - '.class'
-//            names << name
-//        }
-//    }
-//
-//    println 'names: ' + names
-//    List result = annotationFilter( names: names, includes: ['Smoke'] )
-//    println 'result: ' + result
-////    println patterns
-////
-////
-//////    include patterns as String[]
-//    testLogging.showStandardStreams = true
-//
-//    filter {
-////        includePatterns = names as String[]
-////        setIncludePatterns( names as String[] )
-//        setIncludePatterns( ['junit.DemoTest5'] as String[] )
-////        setIncludePatterns( 'junit.DemoTest5' )
-//    }
-
-
-//    println sourceSets.test.output.classesDir
-//    URL url = sourceSets.test.output.classesDir.toURI().toURL()
-//    Class clazz = classLoader.loadClass( 'junit.DemoTest' )
-//    Class dummy = classLoader.loadClass( 'org.junit.Test' )
-//    println 'dummy: ' + dummy.name + ': ' + dummy.isAnnotation()
-//    clazz.declaredMethods.each {
-//        println it.name + ': ' + it.annotations.toList()
-//    }
-//    println clazz.name
-//    println clazz.annotations.toList()
-
-
-}
-
-
-test {
-    //show stdout and stderr
-    testLogging.showStandardStreams = true
-//    testLogging.events 'passed', 'skipped', 'failed'
-    maxParallelForks = 2
-//    forkEvery = 1
 }
 
 
