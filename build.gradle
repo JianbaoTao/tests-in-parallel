@@ -1,8 +1,6 @@
 import java.lang.annotation.Annotation
-import java.lang.reflect.Field
 
 apply plugin: 'groovy'
-//apply from: 'annotationTestFilter.gradle'
 
 group='com.tao'
 version='1.0-SNAPSHOT'
